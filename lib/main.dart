@@ -56,11 +56,11 @@ class WhiteboardApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: Shortcuts(
         shortcuts: const <ShortcutActivator, Intent>{
-          SingleActivator(LogicalKeyboardKey.keyQ, control: true, alt: true, shift: true): ActivateIntent(),
+          SingleActivator(LogicalKeyboardKey.keyQ, control: true, alt: true, shift: true): CloseWindowIntent(),
         },
         child: Actions(
           actions: <Type, Action<Intent>>{
-            ActivateIntent: CallbackAction<Intent>(
+            CloseWindowIntent: CallbackAction<CloseWindowIntent>(
               onInvoke: (_) {
                 windowManager.close();
                 return null;
@@ -78,4 +78,8 @@ class WhiteboardApp extends StatelessWidget {
       ),
     );
   }
+}
+
+class CloseWindowIntent extends Intent {
+  const CloseWindowIntent();
 }
