@@ -207,7 +207,10 @@ class _YDHiddenCloseButtonState extends State<_YDHiddenCloseButton> with SingleT
                           width: 1,
                         ),
                       ),
-                      child: const SizedBox.expand(),
+                      child: const SizedBox(
+                        width: _buttonSize,
+                        height: _buttonSize,
+                      ),
                     ),
                     SizedBox(
                       width: _buttonSize,
