@@ -80,10 +80,156 @@ class WhiteboardApp extends StatelessWidget {
           },
           child: Focus(
             autofocus: true,
-            child: const ColoredBox(
-              color: whiteboardColor,
-              child: SizedBox.expand(),
-            ),
+            child: const WhiteboardHome(),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class WhiteboardHome extends StatelessWidget {
+  const WhiteboardHome({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const ColoredBox(
+      color: whiteboardColor,
+      child: Stack(
+        children: <Widget>[
+          SizedBox.expand(),
+          _YDHiddenCloseButton(),
+        ],
+      ),
+    );
+  }
+}
+
+class _YDHiddenCloseButton extends StatefulWidget {
+  const _YDHiddenCloseButton();
+
+  @override
+  State<_YDHiddenCloseButton> createState() => _YDHiddenCloseButtonState();
+}
+
+class _YDHiddenCloseButtonState extends State<_YDHiddenCloseButton> with SingleTickerProviderStateMixin {
+  static const Duration _closeDuration = Duration(seconds: 2);
+  static const double _buttonSize = 56;
+  static const double _progressStrokeWidth = 3;
+
+  late final AnimationController _progressController;
+  bool _isPressing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _progressController = AnimationController(
+      vsync: this,
+      duration: _closeDuration,
+    )..addStatusListener((status) {
+        if (status != AnimationStatus.completed || !mounted) {
+          return;
+        }
+
+        Actions.invoke(context, const CloseWindowIntent());
+      });
+  }
+
+  @override
+  void dispose() {
+    _progressController.dispose();
+    super.dispose();
+  }
+
+  void _startCloseProgress() {
+    _progressController
+      ..stop()
+      ..value = 0
+      ..forward();
+    setState(() {
+      _isPressing = true;
+    });
+  }
+
+  void _cancelCloseProgress() {
+    if (!_isPressing && _progressController.value == 0) {
+      return;
+    }
+
+    _progressController
+      ..stop()
+      ..value = 0;
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _isPressing = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: 8,
+      right: 8,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onExit: (_) {
+          _cancelCloseProgress();
+        },
+        child: Listener(
+          behavior: HitTestBehavior.opaque,
+          onPointerDown: (_) {
+            _startCloseProgress();
+          },
+          onPointerUp: (_) {
+            _cancelCloseProgress();
+          },
+          onPointerCancel: (_) {
+            _cancelCloseProgress();
+          },
+          child: AnimatedBuilder(
+            animation: _progressController,
+            builder: (context, child) {
+              return SizedBox(
+                width: _buttonSize,
+                height: _buttonSize,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: <Widget>[
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Colors.red.withAlpha(_isPressing ? 34 : 18),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.red.withAlpha(35),
+                          width: 1,
+                        ),
+                      ),
+                      child: const SizedBox.expand(),
+                    ),
+                    SizedBox(
+                      width: _buttonSize,
+                      height: _buttonSize,
+                      child: CircularProgressIndicator(
+                        value: _progressController.value,
+                        strokeWidth: _progressStrokeWidth,
+                        backgroundColor: Colors.red.withAlpha(24),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Colors.red.withAlpha(_isPressing ? 180 : 0),
+                        ),
+                      ),
+                    ),
+                    Icon(
+                      Icons.stop,
+                      size: 22,
+                      color: Colors.red.withAlpha(_isPressing ? 180 : 80),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ),
       ),
