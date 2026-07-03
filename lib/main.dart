@@ -67,7 +67,7 @@ class WhiteboardApp extends StatelessWidget {
           actions: <Type, Action<Intent>>{
             CloseWindowIntent: CallbackAction<CloseWindowIntent>(
               onInvoke: (_) {
-                windowManager.close();
+                _closeWhiteboard();
                 return null;
               },
             ),
@@ -131,7 +131,7 @@ class _YDHiddenCloseButtonState extends State<_YDHiddenCloseButton> with SingleT
           return;
         }
 
-        Actions.invoke(context, const CloseWindowIntent());
+        _closeWhiteboard();
       });
   }
 
@@ -269,4 +269,12 @@ Future<void> _moveWhiteboard(int offset) async {
       size.height,
     ),
   );
+}
+
+Future<void> _closeWhiteboard() async {
+  if (!(Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
+    return;
+  }
+
+  await windowManager.close();
 }
