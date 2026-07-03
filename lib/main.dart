@@ -114,7 +114,7 @@ class _YDHiddenCloseButton extends StatefulWidget {
 }
 
 class _YDHiddenCloseButtonState extends State<_YDHiddenCloseButton> with SingleTickerProviderStateMixin {
-  static const Duration _closeDuration = Duration(seconds: 2);
+  static const Duration _closeDuration = Duration(seconds: 5);
   static const double _buttonSize = 56;
   static const double _progressStrokeWidth = 3;
 
@@ -138,7 +138,12 @@ class _YDHiddenCloseButtonState extends State<_YDHiddenCloseButton> with SingleT
     super.dispose();
   }
 
-  void _startCloseProgress() {
+  void _toggleCloseProgress() {
+    if (_closeTimer != null) {
+      _cancelCloseProgress();
+      return;
+    }
+
     _closeTimer?.cancel();
     _progressController
       ..stop()
@@ -179,20 +184,9 @@ class _YDHiddenCloseButtonState extends State<_YDHiddenCloseButton> with SingleT
       right: 24,
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
-        onExit: (_) {
-          _cancelCloseProgress();
-        },
-        child: Listener(
+        child: GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onPointerDown: (_) {
-            _startCloseProgress();
-          },
-          onPointerUp: (_) {
-            _cancelCloseProgress();
-          },
-          onPointerCancel: (_) {
-            _cancelCloseProgress();
-          },
+          onTap: _toggleCloseProgress,
           child: AnimatedBuilder(
             animation: _progressController,
             builder: (context, child) {
