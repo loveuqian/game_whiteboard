@@ -171,8 +171,8 @@ class _YDHiddenCloseButtonState extends State<_YDHiddenCloseButton> with SingleT
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      top: 8,
-      right: 8,
+      top: 24,
+      right: 24,
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
         onExit: (_) {
