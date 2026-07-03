@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -118,6 +119,7 @@ class _YDHiddenCloseButtonState extends State<_YDHiddenCloseButton> with SingleT
   static const double _progressStrokeWidth = 3;
 
   late final AnimationController _progressController;
+  Timer? _closeTimer;
   bool _isPressing = false;
 
   @override
@@ -126,22 +128,18 @@ class _YDHiddenCloseButtonState extends State<_YDHiddenCloseButton> with SingleT
     _progressController = AnimationController(
       vsync: this,
       duration: _closeDuration,
-    )..addStatusListener((status) {
-        if (status != AnimationStatus.completed || !mounted) {
-          return;
-        }
-
-        _closeWhiteboard();
-      });
+    );
   }
 
   @override
   void dispose() {
+    _closeTimer?.cancel();
     _progressController.dispose();
     super.dispose();
   }
 
   void _startCloseProgress() {
+    _closeTimer?.cancel();
     _progressController
       ..stop()
       ..value = 0
@@ -149,13 +147,19 @@ class _YDHiddenCloseButtonState extends State<_YDHiddenCloseButton> with SingleT
     setState(() {
       _isPressing = true;
     });
+    _closeTimer = Timer(_closeDuration, () {
+      _closeTimer = null;
+      _closeWhiteboard();
+    });
   }
 
   void _cancelCloseProgress() {
-    if (!_isPressing && _progressController.value == 0) {
+    if (!_isPressing && _progressController.value == 0 && _closeTimer == null) {
       return;
     }
 
+    _closeTimer?.cancel();
+    _closeTimer = null;
     _progressController
       ..stop()
       ..value = 0;
