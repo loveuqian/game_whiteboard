@@ -153,7 +153,7 @@ class _YDHiddenCloseButton extends StatefulWidget {
 }
 
 class _YDHiddenCloseButtonState extends State<_YDHiddenCloseButton> with SingleTickerProviderStateMixin {
-  static const Duration _closeDuration = Duration(seconds: 3);
+  static const Duration _closeDuration = Duration(seconds: 2);
   static const double _buttonSize = 56;
   static const double _progressStrokeWidth = 3;
 
