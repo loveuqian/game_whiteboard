@@ -10,6 +10,7 @@ const Color whiteboardColor = Colors.white;
 const int whiteboardSectionCount = 3;
 
 int _whiteboardSectionIndex = 0;
+int _whiteboardVisibleSectionCount = 1;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,12 +20,13 @@ Future<void> main() async {
     final display = await screenRetriever.getPrimaryDisplay();
     final visibleFrame = display.visiblePosition ?? Offset.zero;
     final size = Size(display.size.width, display.size.height / whiteboardSectionCount);
+    final maximumSize = Size(display.size.width, size.height * 2);
 
     await windowManager.waitUntilReadyToShow(
       WindowOptions(
         size: size,
         minimumSize: size,
-        maximumSize: size,
+        maximumSize: maximumSize,
         center: false,
         titleBarStyle: TitleBarStyle.hidden,
         alwaysOnTop: true,
@@ -100,7 +102,44 @@ class WhiteboardHome extends StatelessWidget {
         children: <Widget>[
           SizedBox.expand(),
           _YDHiddenCloseButton(),
+          _YDWhiteboardSectionButtons(),
         ],
+      ),
+    );
+  }
+}
+
+class _YDWhiteboardSectionButtons extends StatelessWidget {
+  const _YDWhiteboardSectionButtons();
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: 88,
+      right: 24,
+      child: Column(
+        children: List<Widget>.generate(5, (index) {
+          const labels = <String>['上', '中', '下', '上中', '中下'];
+          final visibleSectionCount = index >= whiteboardSectionCount ? 2 : 1;
+          final sectionIndex = index >= whiteboardSectionCount ? index - whiteboardSectionCount : index;
+          return Padding(
+            padding: EdgeInsets.only(bottom: index == labels.length - 1 ? 0 : 8),
+            child: SizedBox(
+              width: 56,
+              height: 36,
+              child: OutlinedButton(
+                onPressed: () => _setWhiteboardLayout(sectionIndex, visibleSectionCount),
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: Colors.black.withAlpha(18),
+                  foregroundColor: Colors.black.withAlpha(160),
+                  side: BorderSide(color: Colors.black.withAlpha(35)),
+                  padding: EdgeInsets.zero,
+                ),
+                child: Text(labels[index]),
+              ),
+            ),
+          );
+        }),
       ),
     );
   }
@@ -114,7 +153,7 @@ class _YDHiddenCloseButton extends StatefulWidget {
 }
 
 class _YDHiddenCloseButtonState extends State<_YDHiddenCloseButton> with SingleTickerProviderStateMixin {
-  static const Duration _closeDuration = Duration(seconds: 5);
+  static const Duration _closeDuration = Duration(seconds: 3);
   static const double _buttonSize = 56;
   static const double _progressStrokeWidth = 3;
 
@@ -249,22 +288,30 @@ class MoveWindowIntent extends Intent {
 }
 
 Future<void> _moveWhiteboard(int offset) async {
+  await _setWhiteboardLayout(
+    _whiteboardSectionIndex + offset,
+    _whiteboardVisibleSectionCount,
+  );
+}
+
+Future<void> _setWhiteboardLayout(int sectionIndex, int visibleSectionCount) async {
   if (!(Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
     return;
   }
 
   final display = await screenRetriever.getPrimaryDisplay();
   final visibleFrame = display.visiblePosition ?? Offset.zero;
-  final size = Size(display.size.width, display.size.height / whiteboardSectionCount);
-  final nextSectionIndex = _whiteboardSectionIndex + offset;
-  _whiteboardSectionIndex = nextSectionIndex.clamp(0, whiteboardSectionCount - 1).toInt();
+  final sectionHeight = display.size.height / whiteboardSectionCount;
+  final maxSectionIndex = whiteboardSectionCount - visibleSectionCount;
+  _whiteboardVisibleSectionCount = visibleSectionCount;
+  _whiteboardSectionIndex = sectionIndex.clamp(0, maxSectionIndex).toInt();
 
   await windowManager.setBounds(
     Rect.fromLTWH(
       visibleFrame.dx,
-      visibleFrame.dy + size.height * _whiteboardSectionIndex,
-      size.width,
-      size.height,
+      visibleFrame.dy + sectionHeight * _whiteboardSectionIndex,
+      display.size.width,
+      sectionHeight * visibleSectionCount,
     ),
   );
 }
